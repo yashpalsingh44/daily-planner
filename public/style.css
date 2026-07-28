@@ -1458,6 +1458,25 @@ body.light-theme .form-group input[type="time"] {
     box-shadow: 0 0 0 2px var(--primary-glow);
 }
 
+.collision-warning-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: var(--radius-md);
+    color: var(--warning-color);
+    font-size: 0.82rem;
+    font-weight: 500;
+}
+
+.collision-warning-badge i {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
 .form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1567,6 +1586,190 @@ body.light-theme .toast {
 @keyframes slideInRight {
     from { transform: translateX(120%); opacity: 0; }
     to { transform: translateX(0); opacity: 1; }
+}
+
+/* Header Notification Permission & Test Buttons */
+.btn-notification-perm.active {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: rgba(16, 185, 129, 0.4);
+    color: var(--completed-color);
+}
+
+.btn-test-reminder {
+    background: rgba(139, 92, 246, 0.1);
+    border-color: rgba(139, 92, 246, 0.3);
+    color: var(--primary-color);
+}
+
+.btn-test-reminder:hover {
+    background: rgba(139, 92, 246, 0.2);
+    border-color: var(--primary-color);
+}
+
+/* Enhanced Interactive Reminder Toast */
+.toast.toast-reminder {
+    border-left: 4px solid #f59e0b;
+    background: rgba(24, 20, 36, 0.95);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    box-shadow: 0 12px 35px rgba(245, 158, 11, 0.25);
+    animation: toastPulseBorder 2s infinite, slideInRight 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+body.light-theme .toast.toast-reminder {
+    background: #ffffff;
+    border: 1px solid rgba(245, 158, 11, 0.5);
+    box-shadow: 0 12px 35px rgba(245, 158, 11, 0.18);
+}
+
+.toast-actions-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.btn-toast-action {
+    font-size: 0.72rem;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.btn-toast-action.primary {
+    background: var(--completed-color);
+    border-color: var(--completed-color);
+    color: #ffffff;
+}
+
+.btn-toast-action:hover {
+    filter: brightness(1.1);
+}
+
+@keyframes toastPulseBorder {
+    0%, 100% { box-shadow: 0 0 15px rgba(245, 158, 11, 0.2); }
+    50% { box-shadow: 0 0 25px rgba(245, 158, 11, 0.5); }
+}
+
+/* User Profile Sidebar Widget */
+.user-profile-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+body.light-theme .user-profile-card {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.user-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color), #ec4899);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.user-info {
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+.user-name {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-role {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.btn-auth-action {
+    flex-shrink: 0;
+}
+
+/* Auth Modal Specifics */
+.auth-modal-box {
+    max-width: 420px;
+}
+
+.auth-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-md);
+    margin-bottom: 20px;
+    border: 1px solid var(--border-color);
+}
+
+body.light-theme .auth-tabs {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+.auth-tab-btn {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.auth-tab-btn.active {
+    background: var(--primary-color);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.auth-error-msg {
+    padding: 8px 12px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+    border-radius: var(--radius-sm);
+    font-size: 0.78rem;
+    margin-bottom: 14px;
+}
+
+.badge-recurrence {
+    background: rgba(139, 92, 246, 0.12);
+    color: var(--primary-color);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
 }
 
 /* Responsiveness Settings */

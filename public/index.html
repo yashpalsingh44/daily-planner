@@ -68,6 +68,16 @@
             </div>
 
             <div class="sidebar-footer">
+                <div class="user-profile-card glass" id="user-profile-widget">
+                    <div class="user-avatar" id="user-avatar-initial">G</div>
+                    <div class="user-info">
+                        <span class="user-name" id="user-display-name">Guest Mode</span>
+                        <span class="user-role" id="user-display-email">Sign in to sync tasks</span>
+                    </div>
+                    <button class="btn-icon btn-auth-action" id="auth-action-btn" title="Sign In / Create Account">
+                        <i data-lucide="log-in" id="auth-action-icon"></i>
+                    </button>
+                </div>
                 <div class="clock-widget">
                     <div id="digital-clock">12:00:00 PM</div>
                     <div id="digital-date">Tuesday, July 28</div>
@@ -89,6 +99,14 @@
                     <p>Track your schedule, optimize your day, and achieve your goals.</p>
                 </div>
                 <div class="header-actions">
+                    <button class="btn btn-secondary btn-notification-perm" id="notification-perm-btn" title="Enable OS Desktop Notifications">
+                        <i data-lucide="bell"></i>
+                        <span id="notification-perm-text">Alerts</span>
+                    </button>
+                    <button class="btn btn-secondary btn-test-reminder" id="test-reminder-btn" title="Trigger Test Live SSE Reminder">
+                        <i data-lucide="zap"></i>
+                        <span>Test Alert</span>
+                    </button>
                     <div class="header-date-picker glass">
                         <i data-lucide="calendar"></i>
                         <input type="date" id="current-view-date">
@@ -345,6 +363,20 @@
                         <input type="time" id="task-end" required>
                     </div>
                 </div>
+                <div class="collision-warning-badge hidden" id="collision-warning">
+                    <i data-lucide="alert-triangle"></i>
+                    <span id="collision-warning-text">Time slot overlaps with another task.</span>
+                </div>
+                <div class="form-group">
+                    <label for="task-recurrence">Repeat Recurrence</label>
+                    <select id="task-recurrence">
+                        <option value="none">Does not repeat</option>
+                        <option value="daily">Every Day</option>
+                        <option value="weekdays">Weekdays (Mon - Fri)</option>
+                        <option value="weekly">Every Week</option>
+                        <option value="monthly">Every Month</option>
+                    </select>
+                </div>
                 <div class="form-group checkbox-group">
                     <input type="checkbox" id="task-reminder" checked>
                     <label for="task-reminder">Set reminder notification for this task</label>
@@ -352,6 +384,41 @@
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" id="cancel-task-btn">Cancel</button>
                     <button type="submit" class="btn btn-primary" id="save-task-btn">Save Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- User Authentication Modal -->
+    <div class="modal-overlay hidden" id="auth-modal">
+        <div class="modal glass animate-modal auth-modal-box">
+            <div class="modal-header">
+                <h3 id="auth-modal-title">AetherAccount Security</h3>
+                <button class="btn-close" id="close-auth-modal-btn">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="auth-tabs">
+                <button class="auth-tab-btn active" id="tab-login-btn">Sign In</button>
+                <button class="auth-tab-btn" id="tab-register-btn">Register Account</button>
+            </div>
+            <form id="auth-form">
+                <div class="form-group" id="group-username" style="display:none;">
+                    <label for="auth-username">Username</label>
+                    <input type="text" id="auth-username" placeholder="e.g. AlexMorgan">
+                </div>
+                <div class="form-group">
+                    <label for="auth-email" id="lbl-auth-email">Email or Username</label>
+                    <input type="text" id="auth-email" required placeholder="alex@aetherplan.com">
+                </div>
+                <div class="form-group">
+                    <label for="auth-password">Security Password</label>
+                    <input type="password" id="auth-password" required placeholder="••••••••">
+                </div>
+                <div class="auth-error-msg hidden" id="auth-error-msg"></div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="cancel-auth-btn">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="submit-auth-btn">Sign In</button>
                 </div>
             </form>
         </div>

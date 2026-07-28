@@ -78,6 +78,19 @@ document.addEventListener('DOMContentLoaded', () => {
     let activeTab = 'dashboard';
     let remindersTriggered = JSON.parse(localStorage.getItem('aetherplan_triggered_reminders')) || [];
 
+    // User Authentication State
+    let authToken = localStorage.getItem('aetherplan_token') || null;
+    let currentUser = JSON.parse(localStorage.getItem('aetherplan_user')) || null;
+    let authMode = 'login'; // 'login' or 'register'
+
+    function getAuthHeaders() {
+        const headers = { 'Content-Type': 'application/json' };
+        if (authToken) {
+            headers['Authorization'] = `Bearer ${authToken}`;
+        }
+        return headers;
+    }
+
     // Migration/Ensure date exists
     tasks.forEach(t => {
         if (!t.date) t.date = todayStr;
@@ -175,6 +188,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Request Browser Desktop Notification permission
+    if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+        Notification.requestPermission();
+    }
+
     // Navigation Handler
     navItems.forEach(item => {
         item.addEventListener('click', (e) => {
@@ -268,6 +286,9 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('task-start').value = taskToEdit.start;
             document.getElementById('task-end').value = taskToEdit.end;
             document.getElementById('task-reminder').checked = taskToEdit.reminder;
+            if (document.getElementById('task-recurrence')) {
+                document.getElementById('task-recurrence').value = taskToEdit.recurrence || 'none';
+            }
         } else {
             document.getElementById('modal-title').textContent = 'New Plan Configuration';
             taskForm.reset();
@@ -283,8 +304,53 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('task-start').value = `${startHour}:${startMin}`;
             document.getElementById('task-end').value = `${endHour}:${startMin}`;
             document.getElementById('task-reminder').checked = true;
+            if (document.getElementById('task-recurrence')) {
+                document.getElementById('task-recurrence').value = 'none';
+            }
+        }
+        checkTimeCollision();
+    }
+
+    function checkTimeCollision() {
+        const date = document.getElementById('task-date').value;
+        const start = document.getElementById('task-start').value;
+        const end = document.getElementById('task-end').value;
+        const taskId = document.getElementById('task-id').value;
+
+        const warningEl = document.getElementById('collision-warning');
+        const warningText = document.getElementById('collision-warning-text');
+
+        if (!date || !start || !end || start >= end) {
+            if (warningEl) warningEl.classList.add('hidden');
+            return;
+        }
+
+        const startM = timeToMinutes(start);
+        const endM = timeToMinutes(end);
+
+        const overlap = tasks.find(t => {
+            if (t.id === taskId || t.date !== date || t.status === 'completed') return false;
+            const tStartM = timeToMinutes(t.start);
+            const tEndM = timeToMinutes(t.end);
+            return startM < tEndM && endM > tStartM;
+        });
+
+        if (overlap && warningEl) {
+            warningText.textContent = `Warning: Time overlaps with "${overlap.title}" (${getFormattedTime(overlap.start)} - ${getFormattedTime(overlap.end)}).`;
+            warningEl.classList.remove('hidden');
+        } else if (warningEl) {
+            warningEl.classList.add('hidden');
         }
     }
+
+    // Attach collision listeners
+    ['task-date', 'task-start', 'task-end'].forEach(id => {
+        const input = document.getElementById(id);
+        if (input) {
+            input.addEventListener('change', checkTimeCollision);
+            input.addEventListener('input', checkTimeCollision);
+        }
+    });
 
     function closeModal() {
         taskModal.classList.remove('active');
@@ -302,6 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const start = document.getElementById('task-start').value;
         const end = document.getElementById('task-end').value;
         const reminder = document.getElementById('task-reminder').checked;
+        const recurrence = document.getElementById('task-recurrence') ? document.getElementById('task-recurrence').value : 'none';
 
         // Validation
         if (start >= end) {
@@ -315,11 +382,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (index !== -1) {
                 tasks[index] = {
                     ...tasks[index],
-                    title, desc, date, start, end, reminder
+                    title, desc, date, start, end, reminder, recurrence
                 };
                 fetch(`/api/tasks/${taskId}`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify(tasks[index])
                 }).catch(() => {});
                 showToast('Plan Updated', `"${title}" has been modified successfully.`, 'info');
@@ -330,12 +397,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 id: 'task_' + Date.now(),
                 title, desc, date, start, end,
                 status: 'todo',
-                reminder
+                reminder,
+                recurrence
             };
             tasks.push(newTask);
             fetch('/api/tasks', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: getAuthHeaders(),
                 body: JSON.stringify(newTask)
             }).catch(() => {});
             showToast('Plan Scheduled', `"${title}" has been added to your schedule.`, 'success');
@@ -379,6 +447,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     const reminderKey = `${task.id}_10m`;
                     if (!remindersTriggered.includes(reminderKey)) {
                         showToast('Upcoming Task Reminder', `"${task.title}" starts in 10 minutes (${getFormattedTime(task.start)}).`, 'alert');
+                        if ('Notification' in window && Notification.permission === 'granted') {
+                            new Notification(`AetherPlan: ${task.title} in 10m`, {
+                                body: `Scheduled from ${getFormattedTime(task.start)} to ${getFormattedTime(task.end)}.`
+                            });
+                        }
                         remindersTriggered.push(reminderKey);
                         localStorage.setItem('aetherplan_triggered_reminders', JSON.stringify(remindersTriggered));
                     }
@@ -389,6 +462,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     const reminderKey = `${task.id}_start`;
                     if (!remindersTriggered.includes(reminderKey)) {
                         showToast('Task Starting Now!', `Time to start: "${task.title}".`, 'alert');
+                        if ('Notification' in window && Notification.permission === 'granted') {
+                            new Notification(`AetherPlan: ${task.title} Starting Now!`, {
+                                body: `Scheduled task is starting now (${getFormattedTime(task.start)}).`
+                            });
+                        }
                         // Auto shift to progress status when start time hits
                         if (task.status === 'todo') {
                             task.status = 'progress';
@@ -409,7 +487,7 @@ document.addEventListener('DOMContentLoaded', () => {
             task.status = 'progress';
             fetch(`/api/tasks/${taskId}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: getAuthHeaders(),
                 body: JSON.stringify(task)
             }).catch(() => {});
             showToast('Task In Progress', `You are now working on "${task.title}".`, 'info');
@@ -424,7 +502,7 @@ document.addEventListener('DOMContentLoaded', () => {
             task.completedAt = new Date().toISOString();
             fetch(`/api/tasks/${taskId}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: getAuthHeaders(),
                 body: JSON.stringify(task)
             }).catch(() => {});
             showToast('Task Finished!', `Completed: "${task.title}". Saved to history.`, 'success');
@@ -443,7 +521,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const task = tasks.find(t => t.id === taskId);
         if (task && confirm(`Are you sure you want to remove "${task.title}"?`)) {
             tasks = tasks.filter(t => t.id !== taskId);
-            fetch(`/api/tasks/${taskId}`, { method: 'DELETE' }).catch(() => {});
+            fetch(`/api/tasks/${taskId}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            }).catch(() => {});
             showToast('Task Removed', 'The scheduled item was deleted.', 'info');
             saveTasks();
         }
@@ -456,7 +537,7 @@ document.addEventListener('DOMContentLoaded', () => {
             delete task.completedAt;
             fetch(`/api/tasks/${taskId}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: getAuthHeaders(),
                 body: JSON.stringify(task)
             }).catch(() => {});
             showToast('Task Re-opened', `Moved "${task.title}" back to planning.`, 'info');
@@ -1070,11 +1151,17 @@ document.addEventListener('DOMContentLoaded', () => {
             mouseY = (e.clientY / window.innerHeight) - 0.5;
         });
 
-        // Loop animation
+        // Loop animation with visibility pause
         const clock = new THREE.Clock();
+        let isTabVisible = true;
+
+        document.addEventListener('visibilitychange', () => {
+            isTabVisible = !document.hidden;
+        });
 
         function animate() {
             requestAnimationFrame(animate);
+            if (!isTabVisible) return;
 
             const elapsedTime = clock.getElapsedTime();
 
@@ -1102,23 +1189,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function syncTasksWithAPI() {
         try {
-            const res = await fetch('/api/tasks');
+            const res = await fetch('/api/tasks', {
+                headers: getAuthHeaders()
+            });
             if (res.ok) {
                 const apiTasks = await res.json();
                 if (apiTasks && apiTasks.length > 0) {
                     tasks = apiTasks;
                     localStorage.setItem('aetherplan_tasks', JSON.stringify(tasks));
                     renderApp();
-                    addTerminalLog('AetherAgent: Synced tasks with Go backend database.');
+                    addTerminalLog('AetherAgent: Synced user tasks with Go backend database.');
                 } else if (tasks && tasks.length > 0) {
                     for (const t of tasks) {
                         await fetch('/api/tasks', {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: getAuthHeaders(),
                             body: JSON.stringify(t)
                         });
                     }
-                    addTerminalLog('AetherAgent: Seeded database with local tasks.');
+                    addTerminalLog('AetherAgent: Seeded user database with local tasks.');
                 }
             }
         } catch (err) {
@@ -1126,9 +1215,357 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- USER PROFILE & AUTHENTICATION CONTROLLER ---
+    const userAvatarInitial = document.getElementById('user-avatar-initial');
+    const userDisplayName = document.getElementById('user-display-name');
+    const userDisplayEmail = document.getElementById('user-display-email');
+    const authActionBtn = document.getElementById('auth-action-btn');
+
+    const authModal = document.getElementById('auth-modal');
+    const closeAuthModalBtn = document.getElementById('close-auth-modal-btn');
+    const cancelAuthBtn = document.getElementById('cancel-auth-btn');
+    const authForm = document.getElementById('auth-form');
+    const tabLoginBtn = document.getElementById('tab-login-btn');
+    const tabRegisterBtn = document.getElementById('tab-register-btn');
+    const groupUsername = document.getElementById('group-username');
+    const authEmailInput = document.getElementById('auth-email');
+    const authUsernameInput = document.getElementById('auth-username');
+    const authPasswordInput = document.getElementById('auth-password');
+    const authErrorMsg = document.getElementById('auth-error-msg');
+    const submitAuthBtn = document.getElementById('submit-auth-btn');
+    const lblAuthEmail = document.getElementById('lbl-auth-email');
+
+    function renderUserProfile() {
+        if (currentUser && authToken) {
+            if (userAvatarInitial) userAvatarInitial.textContent = (currentUser.username || currentUser.email || 'U').charAt(0).toUpperCase();
+            if (userDisplayName) userDisplayName.textContent = currentUser.username || 'User';
+            if (userDisplayEmail) userDisplayEmail.textContent = currentUser.email || 'Signed In';
+            if (authActionBtn) {
+                authActionBtn.title = "Log Out Account";
+                authActionBtn.innerHTML = '<i data-lucide="log-out"></i>';
+            }
+        } else {
+            if (userAvatarInitial) userAvatarInitial.textContent = 'G';
+            if (userDisplayName) userDisplayName.textContent = 'Guest Mode';
+            if (userDisplayEmail) userDisplayEmail.textContent = 'Sign in to sync tasks';
+            if (authActionBtn) {
+                authActionBtn.title = "Sign In / Register";
+                authActionBtn.innerHTML = '<i data-lucide="log-in"></i>';
+            }
+        }
+        updateIcons();
+    }
+
+    function openAuthModal() {
+        if (!authModal) return;
+        if (authErrorMsg) authErrorMsg.classList.add('hidden');
+        authModal.classList.remove('hidden');
+        authModal.classList.add('active');
+    }
+
+    function closeAuthModal() {
+        if (!authModal) return;
+        authModal.classList.add('hidden');
+        authModal.classList.remove('active');
+    }
+
+    if (authActionBtn) {
+        authActionBtn.addEventListener('click', () => {
+            if (currentUser && authToken) {
+                authToken = null;
+                currentUser = null;
+                localStorage.removeItem('aetherplan_token');
+                localStorage.removeItem('aetherplan_user');
+                renderUserProfile();
+                syncTasksWithAPI();
+                showToast('Logged Out', 'Signed out of user account.', 'info');
+                addTerminalLog('AetherAgent: Logged out user account.');
+            } else {
+                openAuthModal();
+            }
+        });
+    }
+
+    if (closeAuthModalBtn) closeAuthModalBtn.addEventListener('click', closeAuthModal);
+    if (cancelAuthBtn) cancelAuthBtn.addEventListener('click', closeAuthModal);
+
+    if (tabLoginBtn && tabRegisterBtn) {
+        tabLoginBtn.addEventListener('click', () => {
+            authMode = 'login';
+            tabLoginBtn.classList.add('active');
+            tabRegisterBtn.classList.remove('active');
+            if (groupUsername) groupUsername.style.display = 'none';
+            if (lblAuthEmail) lblAuthEmail.textContent = 'Email or Username';
+            if (submitAuthBtn) submitAuthBtn.textContent = 'Sign In';
+            if (authErrorMsg) authErrorMsg.classList.add('hidden');
+        });
+
+        tabRegisterBtn.addEventListener('click', () => {
+            authMode = 'register';
+            tabRegisterBtn.classList.add('active');
+            tabLoginBtn.classList.remove('active');
+            if (groupUsername) groupUsername.style.display = 'block';
+            if (lblAuthEmail) lblAuthEmail.textContent = 'Email Address';
+            if (submitAuthBtn) submitAuthBtn.textContent = 'Register Account';
+            if (authErrorMsg) authErrorMsg.classList.add('hidden');
+        });
+    }
+
+    if (authForm) {
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (authErrorMsg) authErrorMsg.classList.add('hidden');
+
+            const email = authEmailInput ? authEmailInput.value.trim() : '';
+            const password = authPasswordInput ? authPasswordInput.value.trim() : '';
+            const username = authUsernameInput ? authUsernameInput.value.trim() : '';
+
+            const endpoint = authMode === 'register' ? '/api/auth/register' : '/api/auth/login';
+            const payload = authMode === 'register' 
+                ? { username, email, password }
+                : { email, password };
+
+            try {
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    authToken = data.token;
+                    currentUser = data.user;
+                    localStorage.setItem('aetherplan_token', authToken);
+                    localStorage.setItem('aetherplan_user', JSON.stringify(currentUser));
+                    
+                    renderUserProfile();
+                    closeAuthModal();
+                    syncTasksWithAPI();
+                    showToast('Authenticated', `Welcome, ${currentUser.username}!`, 'success');
+                    addTerminalLog(`AetherAgent: Authenticated user '${currentUser.username}'.`);
+                } else {
+                    const errText = await res.text();
+                    if (authErrorMsg) {
+                        authErrorMsg.textContent = errText || 'Authentication failed.';
+                        authErrorMsg.classList.remove('hidden');
+                    }
+                }
+            } catch (err) {
+                if (authErrorMsg) {
+                    authErrorMsg.textContent = 'Network or server connection failed.';
+                    authErrorMsg.classList.remove('hidden');
+                }
+            }
+        });
+    }
+
+    // --- REAL-TIME SSE NOTIFICATIONS & AUDIO CHIME ---
+    const notificationPermBtn = document.getElementById('notification-perm-btn');
+    const notificationPermText = document.getElementById('notification-perm-text');
+    const testReminderBtn = document.getElementById('test-reminder-btn');
+
+    // Update Notification Permission UI Button
+    function updateNotificationPermUI() {
+        if (!notificationPermBtn || !('Notification' in window)) return;
+        if (Notification.permission === 'granted') {
+            notificationPermBtn.classList.add('active');
+            if (notificationPermText) notificationPermText.textContent = 'Alerts Active';
+        } else if (Notification.permission === 'denied') {
+            notificationPermBtn.classList.remove('active');
+            if (notificationPermText) notificationPermText.textContent = 'Alerts Blocked';
+        } else {
+            notificationPermBtn.classList.remove('active');
+            if (notificationPermText) notificationPermText.textContent = 'Enable Alerts';
+        }
+    }
+
+    if (notificationPermBtn && 'Notification' in window) {
+        updateNotificationPermUI();
+        notificationPermBtn.addEventListener('click', async () => {
+            if (Notification.permission === 'default') {
+                const perm = await Notification.requestPermission();
+                updateNotificationPermUI();
+                if (perm === 'granted') {
+                    showToast('Desktop Notifications Enabled!', 'info');
+                    addTerminalLog('AetherAgent: Browser Desktop Notification permission granted.');
+                }
+            } else if (Notification.permission === 'granted') {
+                showToast('Desktop Notifications are already active!', 'info');
+            } else {
+                showToast('Notification permission was blocked in browser settings.', 'alert');
+            }
+        });
+    }
+
+    if (testReminderBtn) {
+        testReminderBtn.addEventListener('click', async () => {
+            try {
+                const res = await fetch('/api/tasks/test-reminder', { method: 'POST' });
+                if (res.ok) {
+                    addTerminalLog('AetherAgent: Sent test reminder request to Go backend.');
+                } else {
+                    triggerLiveReminderAlert({
+                        id: 'test_local_' + Date.now(),
+                        title: '⚡ Test Live Reminder Alert',
+                        desc: 'Client-side fallback live notification test.',
+                        start: new Date().toTimeString().substring(0, 5)
+                    });
+                }
+            } catch (err) {
+                triggerLiveReminderAlert({
+                    id: 'test_local_' + Date.now(),
+                    title: '⚡ Test Live Reminder Alert',
+                    desc: 'Offline fallback live notification test.',
+                    start: new Date().toTimeString().substring(0, 5)
+                });
+            }
+        });
+    }
+
+    // Synthesize double-chime notification sound using Web Audio API
+    function playChimeSound() {
+        try {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtx) return;
+            const ctx = new AudioCtx();
+
+            const playNote = (freq, startTime, duration) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
+
+                gain.gain.setValueAtTime(0.001, ctx.currentTime + startTime);
+                gain.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + startTime + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startTime + duration);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc.start(ctx.currentTime + startTime);
+                osc.stop(ctx.currentTime + startTime + duration);
+            };
+
+            playNote(587.33, 0, 0.3);   // D5 note
+            playNote(880.00, 0.15, 0.4); // A5 note
+        } catch (e) {
+            // Audio context blocked or unsupported
+        }
+    }
+
+    // Show Desktop OS Notification
+    function showDesktopNotification(task) {
+        if (!('Notification' in window) || Notification.permission !== 'granted') return;
+        try {
+            const notif = new Notification(`⏰ Task Reminder: ${task.title}`, {
+                body: `Scheduled for ${task.start} - ${task.desc || 'No description'}`,
+                tag: task.id || 'reminder'
+            });
+            notif.onclick = () => {
+                window.focus();
+            };
+        } catch (e) {
+            // Ignored
+        }
+    }
+
+    // Trigger Complete Live Reminder (Sound + Toast + Desktop Notif + Console)
+    function triggerLiveReminderAlert(task) {
+        playChimeSound();
+        showDesktopNotification(task);
+        addTerminalLog(`AetherAgent: 🚨 LIVE REMINDER TRIGGERED: '${task.title}' at ${task.start}!`);
+
+        if (!toastContainer) return;
+
+        const toast = document.createElement('div');
+        toast.className = 'toast toast-reminder';
+        toast.innerHTML = `
+            <div class="toast-icon">
+                <i data-lucide="bell-ring" style="color:var(--warning-color); width:24px; height:24px;"></i>
+            </div>
+            <div class="toast-content">
+                <div class="toast-title">⏰ Task Reminder (${task.start})</div>
+                <div class="toast-message" style="font-weight:600; color:var(--text-primary); margin-top:2px;">${task.title}</div>
+                ${task.desc ? `<div class="toast-message">${task.desc}</div>` : ''}
+                <div class="toast-actions-row">
+                    <button class="btn-toast-action primary" id="toast-done-${task.id}">Mark Done</button>
+                    <button class="btn-toast-action" id="toast-close-${task.id}">Dismiss</button>
+                </div>
+            </div>
+        `;
+
+        toastContainer.appendChild(toast);
+        updateIcons();
+
+        const doneBtn = toast.querySelector(`#toast-done-${task.id}`);
+        const closeBtn = toast.querySelector(`#toast-close-${task.id}`);
+
+        if (doneBtn) {
+            doneBtn.addEventListener('click', () => {
+                const target = tasks.find(t => t.id === task.id);
+                if (target) {
+                    target.status = 'completed';
+                    target.completedAt = new Date().toISOString();
+                    localStorage.setItem('aetherplan_tasks', JSON.stringify(tasks));
+                    fetch(`/api/tasks/${task.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(target)
+                    }).catch(() => {});
+                    renderApp();
+                    addTerminalLog(`AetherAgent: Marked '${task.title}' as completed from notification.`);
+                }
+                toast.remove();
+            });
+        }
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                toast.remove();
+            });
+        }
+
+        // Auto dismiss after 15s
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.remove();
+            }
+        }, 15000);
+    }
+
+    // Connect to Server-Sent Events (SSE) stream `/api/events`
+    function initSSERealtimeEvents() {
+        if (!('EventSource' in window)) return;
+
+        try {
+            const eventSource = new EventSource('/api/events');
+
+            eventSource.addEventListener('init', (e) => {
+                const data = JSON.parse(e.data || '{}');
+                addTerminalLog(`AetherAgent SSE Stream: ${data.message || 'Connected'}`);
+            });
+
+            eventSource.addEventListener('reminder', (e) => {
+                const payload = JSON.parse(e.data || '{}');
+                if (payload.task) {
+                    triggerLiveReminderAlert(payload.task);
+                }
+            });
+
+            eventSource.onerror = () => {
+                // EventSource auto-reconnects natively
+            };
+        } catch (err) {
+            // Fallback offline mode
+        }
+    }
+
     // Initial render
     bootTerminal();
     initThreeBG();
+    renderUserProfile();
     renderApp();
     syncTasksWithAPI();
+    initSSERealtimeEvents();
 });
