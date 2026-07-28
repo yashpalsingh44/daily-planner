@@ -865,6 +865,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Re-bind Lucide Icons and drag listeners
         updateIcons();
         setupDragAndDrop();
+        initTilt();
     }
 
     // Bind search keyup
@@ -938,7 +939,140 @@ document.addEventListener('DOMContentLoaded', () => {
     checkReminders();
     setInterval(checkReminders, 10000);
 
+    // --- 3D INTERACTIVE CARD TILT ---
+    function initTilt() {
+        const cards = document.querySelectorAll('.card, .board-task-card');
+        cards.forEach(card => {
+            if (card.getAttribute('data-tilt-active')) return;
+            card.setAttribute('data-tilt-active', 'true');
+
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const xc = rect.width / 2;
+                const yc = rect.height / 2;
+                const angleX = (yc - y) / 10; // max 10 degrees rotation
+                const angleY = (x - xc) / 10;
+                card.style.transform = `perspective(800px) rotateX(${angleX}deg) rotateY(${angleY}deg) translateY(-2px)`;
+            });
+
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'perspective(800px) rotateX(0) rotateY(0) translateY(0)';
+            });
+        });
+    }
+
+    // --- THREE.JS 3D PARTICLE BACKGROUND ---
+    function initThreeBG() {
+        const canvas = document.getElementById('three-bg-canvas');
+        if (!canvas || !window.THREE) return;
+
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+        const scene = new THREE.Scene();
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.z = 30;
+
+        // Custom Glowing Particle Texture
+        function createParticleTexture() {
+            const canvasTex = document.createElement('canvas');
+            canvasTex.width = 16;
+            canvasTex.height = 16;
+            const ctx = canvasTex.getContext('2d');
+            const grad = ctx.createRadialGradient(8, 8, 0, 8, 8, 8);
+            grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+            grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 16, 16);
+            return new THREE.CanvasTexture(canvasTex);
+        }
+
+        // Generate Particles
+        const particleCount = 200;
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+        const colors = new Float32Array(particleCount * 3);
+
+        const colorOptions = [
+            new THREE.Color('#8b5cf6'), // Purple
+            new THREE.Color('#38bdf8'), // Blue
+            new THREE.Color('#10b981'), // Green
+            new THREE.Color('#ec4899')  // Pink
+        ];
+
+        for (let i = 0; i < particleCount * 3; i += 3) {
+            // Position
+            positions[i] = (Math.random() - 0.5) * 80;     // x
+            positions[i + 1] = (Math.random() - 0.5) * 80; // y
+            positions[i + 2] = (Math.random() - 0.5) * 60; // z
+
+            // Color
+            const col = colorOptions[Math.floor(Math.random() * colorOptions.length)];
+            colors[i] = col.r;
+            colors[i + 1] = col.g;
+            colors[i + 2] = col.b;
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+        const material = new THREE.PointsMaterial({
+            size: 1.5,
+            sizeAttenuation: true,
+            map: createParticleTexture(),
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+            vertexColors: true
+        });
+
+        const points = new THREE.Points(geometry, material);
+        scene.add(points);
+
+        // Interaction Mousemove
+        let mouseX = 0;
+        let mouseY = 0;
+        document.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX / window.innerWidth) - 0.5;
+            mouseY = (e.clientY / window.innerHeight) - 0.5;
+        });
+
+        // Loop animation
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const elapsedTime = clock.getElapsedTime();
+
+            // Rotate points gently
+            points.rotation.y = elapsedTime * 0.05;
+            points.rotation.x = elapsedTime * 0.03;
+
+            // Parallax movement with mouse interpolation
+            camera.position.x += (mouseX * 15 - camera.position.x) * 0.05;
+            camera.position.y += (-mouseY * 15 - camera.position.y) * 0.05;
+            camera.lookAt(scene.position);
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // Resize handler
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    }
+
     // Initial render
     bootTerminal();
+    initThreeBG();
     renderApp();
 });
