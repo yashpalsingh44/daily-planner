@@ -2,9 +2,9 @@
 
 :root {
     /* Dark Theme (Default) */
-    --bg-primary: #0a0b10;
-    --bg-secondary: #12131c;
-    --bg-glass: rgba(18, 19, 28, 0.65);
+    --bg-primary: #06070a;
+    --bg-secondary: rgba(18, 19, 28, 0.6);
+    --bg-glass: rgba(18, 19, 28, 0.45);
     --border-color: rgba(255, 255, 255, 0.08);
     --border-hover: rgba(255, 255, 255, 0.15);
     
@@ -42,9 +42,9 @@
 
 /* Light Theme overrides */
 body.light-theme {
-    --bg-primary: #f8fafc;
-    --bg-secondary: #ffffff;
-    --bg-glass: rgba(255, 255, 255, 0.75);
+    --bg-primary: #f1f5f9;
+    --bg-secondary: rgba(255, 255, 255, 0.6);
+    --bg-glass: rgba(255, 255, 255, 0.45);
     --border-color: rgba(0, 0, 0, 0.08);
     --border-hover: rgba(0, 0, 0, 0.15);
     
@@ -103,31 +103,58 @@ body {
     transition: background-color 0.4s ease, color 0.4s ease;
 }
 
-/* Dynamic background gradients */
-body.dark-theme::before {
-    content: '';
-    position: absolute;
-    top: -10%;
-    left: -10%;
-    width: 120%;
-    height: 120%;
-    background: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(20, 184, 166, 0.08) 0%, transparent 40%);
+/* Ambient Background Glows */
+.ambient-glow {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(140px);
     pointer-events: none;
     z-index: 0;
+    opacity: 0.12;
+    transition: opacity 0.5s ease;
 }
 
-body.light-theme::before {
-    content: '';
-    position: absolute;
+body.light-theme .ambient-glow {
+    opacity: 0.05;
+}
+
+.glow-1 {
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, var(--primary-color), transparent 70%);
     top: -10%;
     left: -10%;
-    width: 120%;
-    height: 120%;
-    background: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.04) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(20, 184, 166, 0.04) 0%, transparent 40%);
-    pointer-events: none;
-    z-index: 0;
+    animation: drift 25s infinite alternate ease-in-out;
+}
+
+.glow-2 {
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, var(--accent-color), transparent 70%);
+    bottom: -15%;
+    right: -10%;
+    animation: drift 30s infinite alternate-reverse ease-in-out;
+}
+
+.glow-3 {
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, var(--todo-color), transparent 70%);
+    top: 40%;
+    left: 45%;
+    animation: drift 20s infinite alternate ease-in-out;
+}
+
+@keyframes drift {
+    0% {
+        transform: translate(0, 0) scale(1);
+    }
+    50% {
+        transform: translate(60px, -40px) scale(1.1);
+    }
+    100% {
+        transform: translate(-40px, 50px) scale(0.9);
+    }
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -426,11 +453,14 @@ body.light-theme .btn-secondary:hover {
     transition: var(--transition-smooth);
 }
 
-.card.glass {
+.glass {
     background: var(--bg-glass);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
     border: 1px solid var(--border-color);
+}
+
+.card.glass {
     box-shadow: var(--shadow-sm);
 }
 
@@ -798,10 +828,6 @@ body.light-theme .timeline-quick-item {
 /* Full Timeline Page Tab styling */
 .timeline-container {
     border-radius: var(--radius-lg);
-    background: var(--bg-glass);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border: 1px solid var(--border-color);
     padding: 24px;
 }
 
@@ -934,10 +960,6 @@ body.light-theme .timeline-row {
 
 .board-column {
     border-radius: var(--radius-lg);
-    background: var(--bg-glass);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
     max-height: 75vh;
@@ -1054,10 +1076,6 @@ body.light-theme .board-task-card {
 /* History Logs styling */
 .history-container {
     border-radius: var(--radius-lg);
-    background: var(--bg-glass);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border: 1px solid var(--border-color);
     padding: 24px;
 }
 
@@ -1201,9 +1219,8 @@ body.light-theme .history-table tbody tr:hover {
 }
 
 .modal.glass {
-    background: rgba(18, 19, 28, 0.85);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
 }
