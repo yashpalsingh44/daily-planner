@@ -135,11 +135,14 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('aetherplan_theme', theme);
     });
 
-    // Load theme from preference
-    const savedTheme = localStorage.getItem('aetherplan_theme');
+    // Load theme from preference (default to light)
+    const savedTheme = localStorage.getItem('aetherplan_theme') || 'light';
     if (savedTheme === 'light') {
         document.body.classList.remove('dark-theme');
         document.body.classList.add('light-theme');
+    } else {
+        document.body.classList.remove('light-theme');
+        document.body.classList.add('dark-theme');
     }
 
     // Navigation Handler
