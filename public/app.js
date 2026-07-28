@@ -233,6 +233,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Toast Notification Maker
     function showToast(title, message, type = 'info') {
+        let container = document.getElementById('toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toast-container';
+            container.className = 'toast-container';
+            document.body.appendChild(container);
+        }
+
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
         
@@ -250,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
         
-        toastContainer.appendChild(toast);
+        container.appendChild(toast);
         updateIcons();
 
         // Slide out and remove
@@ -1402,27 +1410,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (testReminderBtn) {
-        testReminderBtn.addEventListener('click', async () => {
-            try {
-                const res = await fetch('/api/tasks/test-reminder', { method: 'POST' });
-                if (res.ok) {
-                    addTerminalLog('AetherAgent: Sent test reminder request to Go backend.');
-                } else {
-                    triggerLiveReminderAlert({
-                        id: 'test_local_' + Date.now(),
-                        title: '⚡ Test Live Reminder Alert',
-                        desc: 'Client-side fallback live notification test.',
-                        start: new Date().toTimeString().substring(0, 5)
-                    });
-                }
-            } catch (err) {
-                triggerLiveReminderAlert({
-                    id: 'test_local_' + Date.now(),
-                    title: '⚡ Test Live Reminder Alert',
-                    desc: 'Offline fallback live notification test.',
-                    start: new Date().toTimeString().substring(0, 5)
-                });
-            }
+        testReminderBtn.addEventListener('click', () => {
+            triggerLiveReminderAlert({
+                id: 'test_' + Date.now(),
+                title: '⚡ Test Live Reminder Alert',
+                desc: 'Real-time alert chime & notification test.',
+                start: new Date().toTimeString().substring(0, 5)
+            });
+            addTerminalLog('ChronosAgent: Triggered live test reminder alert.');
+            fetch('/api/tasks/test-reminder', { method: 'POST' }).catch(() => {});
         });
     }
 
@@ -1477,9 +1473,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function triggerLiveReminderAlert(task) {
         playChimeSound();
         showDesktopNotification(task);
-        addTerminalLog(`AetherAgent: 🚨 LIVE REMINDER TRIGGERED: '${task.title}' at ${task.start}!`);
+        addTerminalLog(`ChronosAgent: 🚨 LIVE REMINDER TRIGGERED: '${task.title}' at ${task.start}!`);
 
-        if (!toastContainer) return;
+        let toastContainer = document.getElementById('toast-container');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toast-container';
+            toastContainer.className = 'toast-container';
+            document.body.appendChild(toastContainer);
+        }
 
         const toast = document.createElement('div');
         toast.className = 'toast toast-reminder';

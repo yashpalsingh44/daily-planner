@@ -1,0 +1,85 @@
+{
+  "users": [
+    {
+      "id": "user_1785233916084",
+      "username": "yashpal44",
+      "email": "yashpalbusiness44@gmail.com",
+      "passwordHash": "af935cecbcce44f2b5f9a0b0b8360e86$418c61d1a681ff018f97bcccccfb48c67c851c8b6bad4c7db1a93c9755a884a2",
+      "createdAt": "2026-07-28T10:18:36.099Z"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task-1",
+      "userId": "default_user",
+      "title": "Morning Meditation & Planning",
+      "desc": "Start the day with mindfulness and list key objectives in the calendar.",
+      "date": "2026-07-28",
+      "start": "07:30",
+      "end": "08:00",
+      "status": "completed",
+      "reminder": true,
+      "recurrence": "none"
+    },
+    {
+      "id": "task-2",
+      "userId": "default_user",
+      "title": "Review Dashboard Prototypes",
+      "desc": "Examine frontend layout designs, color harmony, gradients, and responsiveness rules.",
+      "date": "2026-07-28",
+      "start": "09:00",
+      "end": "11:00",
+      "status": "completed",
+      "reminder": true,
+      "recurrence": "none"
+    },
+    {
+      "id": "task-3",
+      "userId": "default_user",
+      "title": "AetherPlan Core Frontend Implementation",
+      "desc": "Develop HTML structure, custom CSS glassmorphism, and interactive JavaScript features.",
+      "date": "2026-07-28",
+      "start": "11:00",
+      "end": "13:00",
+      "status": "progress",
+      "reminder": true,
+      "recurrence": "none"
+    },
+    {
+      "id": "task-4",
+      "userId": "default_user",
+      "title": "Lunch Break & Relax",
+      "desc": "Healthy meal and a brief outdoor walk to recharge cognitive focus.",
+      "date": "2026-07-28",
+      "start": "13:00",
+      "end": "14:00",
+      "status": "todo",
+      "reminder": true,
+      "recurrence": "none"
+    },
+    {
+      "id": "task-5",
+      "userId": "default_user",
+      "title": "Git Repository & GitHub Push",
+      "desc": "Initialize git locally, link to user's remote repository, and push files.",
+      "date": "2026-07-28",
+      "start": "14:30",
+      "end": "15:30",
+      "status": "todo",
+      "reminder": false,
+      "recurrence": "none"
+    },
+    {
+      "id": "task-6",
+      "userId": "default_user",
+      "title": "Client Progress Review Sync",
+      "desc": "Gather user feedback on Phase 1 UI design and align on database schema details.",
+      "date": "2026-07-28",
+      "start": "16:00",
+      "end": "17:00",
+      "status": "todo",
+      "reminder": true,
+      "recurrence": "none"
+    }
+  ]
+}
