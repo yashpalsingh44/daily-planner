@@ -1057,7 +1057,7 @@ document.addEventListener('DOMContentLoaded', () => {
     checkReminders();
     setInterval(checkReminders, 10000);
 
-    // --- 3D INTERACTIVE CARD TILT ---
+    // --- 3D INTERACTIVE CARD TILT (Smooth & Level Buttons) ---
     function initTilt() {
         const cards = document.querySelectorAll('.card, .board-task-card');
         cards.forEach(card => {
@@ -1065,18 +1065,24 @@ document.addEventListener('DOMContentLoaded', () => {
             card.setAttribute('data-tilt-active', 'true');
 
             card.addEventListener('mousemove', (e) => {
+                // If hovering over an interactive button or input, level flat for instant effortless clicks!
+                if (e.target.closest('button, a, input, select, textarea, .btn-text')) {
+                    card.style.transform = 'perspective(800px) rotateX(0deg) rotateY(0deg) translateY(-2px)';
+                    return;
+                }
                 const rect = card.getBoundingClientRect();
                 const x = e.clientX - rect.left;
                 const y = e.clientY - rect.top;
                 const xc = rect.width / 2;
                 const yc = rect.height / 2;
-                const angleX = (yc - y) / 10; // max 10 degrees rotation
-                const angleY = (x - xc) / 10;
+                // Subtle 3D tilt (max 3 degrees)
+                const angleX = (yc - y) / 45;
+                const angleY = (x - xc) / 45;
                 card.style.transform = `perspective(800px) rotateX(${angleX}deg) rotateY(${angleY}deg) translateY(-2px)`;
             });
 
             card.addEventListener('mouseleave', () => {
-                card.style.transform = 'perspective(800px) rotateX(0) rotateY(0) translateY(0)';
+                card.style.transform = 'perspective(800px) rotateX(0deg) rotateY(0deg) translateY(0px)';
             });
         });
     }

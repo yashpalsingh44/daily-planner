@@ -596,9 +596,23 @@ body.light-theme .btn-secondary:hover {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    transition: transform 0.15s ease-out, box-shadow 0.3s ease;
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease;
     transform-style: preserve-3d;
     perspective: 1000px;
+}
+
+[data-action="go-to-timeline"],
+.card-header button,
+.card-header a {
+    position: relative;
+    z-index: 10;
+    pointer-events: auto !important;
+    transform: translateZ(15px);
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+[data-action="go-to-timeline"]:hover {
+    transform: translateZ(20px) scale(1.04);
 }
 
 .glass {
