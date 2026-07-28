@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AetherPlan | Premium Daily Planner</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-icon">
+                    <i data-lucide="compass" class="glow-icon"></i>
+                </div>
+                <h1>AetherPlan</h1>
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" data-tab="dashboard">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="timeline">
+                    <i data-lucide="calendar-range"></i>
+                    <span>Timeline</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="board">
+                    <i data-lucide="trello"></i>
+                    <span>Task Board</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="history">
+                    <i data-lucide="history"></i>
+                    <span>Completed Log</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="clock-widget">
+                    <div id="digital-clock">12:00:00 PM</div>
+                    <div id="digital-date">Tuesday, July 28</div>
+                </div>
+                <div class="theme-toggle" id="theme-toggle-btn">
+                    <i data-lucide="sun" class="sun-icon"></i>
+                    <i data-lucide="moon" class="moon-icon"></i>
+                    <span>Toggle Theme</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="welcome-text">
+                    <h2 id="greeting">Good Morning!</h2>
+                    <p>Track your schedule, optimize your day, and achieve your goals.</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-primary btn-add-task" id="open-task-modal-btn">
+                        <i data-lucide="plus"></i>
+                        <span>New Plan</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Dashboard Tab -->
+            <section id="tab-dashboard" class="tab-content active">
+                <div class="dashboard-grid">
+                    
+                    <!-- Quick Stats & Current Activity -->
+                    <div class="card current-activity-card glass">
+                        <div class="card-header">
+                            <span class="badge badge-ongoing">Now Doing</span>
+                            <h3 class="card-title">Current Activity</h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="current-task-display" class="empty-state">
+                                <i data-lucide="coffee"></i>
+                                <p>Nothing scheduled right now. Take a deep breath or plan something new!</p>
+                            </div>
+                            <div id="current-task-active" class="active-task-container hidden">
+                                <h4 class="task-active-title">Design Presentation Draft</h4>
+                                <p class="task-active-desc">Refine design layout slides and build responsive prototype pages.</p>
+                                <div class="task-time-info">
+                                    <div class="time-block">
+                                        <i data-lucide="clock"></i>
+                                        <span id="current-task-duration">10:00 AM - 12:00 PM</span>
+                                    </div>
+                                    <div class="progress-container">
+                                        <div class="progress-bar" id="current-task-progress" style="width: 45%;"></div>
+                                    </div>
+                                    <div class="time-remaining" id="current-task-remaining">55 mins remaining</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Next Up Card -->
+                    <div class="card next-up-card glass">
+                        <div class="card-header">
+                            <span class="badge badge-upcoming">Next Up</span>
+                            <h3 class="card-title">Upcoming Plan</h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="next-task-display" class="empty-state">
+                                <i data-lucide="calendar-check"></i>
+                                <p>No upcoming tasks. You are all set for now!</p>
+                            </div>
+                            <div id="next-task-active" class="active-task-container hidden">
+                                <h4 class="task-active-title">Team Standup Call</h4>
+                                <p class="task-active-desc">Sync with developers and designers regarding the planner UI workflow.</p>
+                                <div class="task-time-info">
+                                    <div class="time-block">
+                                        <i data-lucide="bell"></i>
+                                        <span id="next-task-time">Starts in 35 minutes (12:30 PM)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Task Progress Widget -->
+                    <div class="card progress-overview-card glass">
+                        <div class="card-header">
+                            <h3 class="card-title">Daily Progress</h3>
+                        </div>
+                        <div class="card-body progress-body">
+                            <div class="circular-progress-container">
+                                <svg class="progress-ring" width="120" height="120">
+                                    <circle class="progress-ring__circle-bg" stroke="var(--border-color)" stroke-width="8" fill="transparent" r="50" cx="60" cy="60"/>
+                                    <circle class="progress-ring__circle" stroke="url(#progress-gradient)" stroke-width="8" fill="transparent" r="50" cx="60" cy="60" stroke-dasharray="314.16 314.16" stroke-dashoffset="314.16" id="progress-circle-svg"/>
+                                    <defs>
+                                        <linearGradient id="progress-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" stop-color="var(--primary-color)" />
+                                            <stop offset="100%" stop-color="var(--accent-color)" />
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                                <div class="progress-percentage"><span id="progress-percent-val">0</span>%</div>
+                            </div>
+                            <div class="stats-list">
+                                <div class="stat-item">
+                                    <span class="stat-label">To Do</span>
+                                    <span class="stat-value" id="stat-todo-count">0</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">In Progress</span>
+                                    <span class="stat-value" id="stat-progress-count">0</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Completed</span>
+                                    <span class="stat-value" id="stat-completed-count">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mini Timeline Overview -->
+                    <div class="card mini-timeline-card glass col-span-2">
+                        <div class="card-header">
+                            <h3 class="card-title">Today's Schedule Overview</h3>
+                            <button class="btn btn-text text-primary" data-action="go-to-timeline">Full Timeline <i data-lucide="arrow-right"></i></button>
+                        </div>
+                        <div class="card-body">
+                            <div class="timeline-quick-list" id="mini-timeline-list">
+                                <!-- Generated Dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Active Reminders Panel -->
+                    <div class="card reminders-card glass">
+                        <div class="card-header">
+                            <h3 class="card-title">Reminders & Alerts</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="reminders-list" id="reminders-container">
+                                <!-- Generated Dynamically -->
+                                <div class="empty-state small">
+                                    <i data-lucide="bell-off"></i>
+                                    <p>No active reminders configured.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- Full Timeline Tab -->
+            <section id="tab-timeline" class="tab-content">
+                <div class="timeline-container glass">
+                    <div class="timeline-header-controls">
+                        <h3>Schedule Timeline</h3>
+                        <div class="timeline-legend">
+                            <span class="legend-item"><span class="color-dot todo"></span> To Do</span>
+                            <span class="legend-item"><span class="color-dot progress"></span> In Progress</span>
+                            <span class="legend-item"><span class="color-dot completed"></span> Completed</span>
+                        </div>
+                    </div>
+                    <div class="timeline-scroll-area">
+                        <div class="timeline-grid-wrapper" id="timeline-hours-grid">
+                            <!-- Hours and Task blocks populated dynamically by JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Task Board Tab -->
+            <section id="tab-board" class="tab-content">
+                <div class="board-columns">
+                    <!-- Column: To Do -->
+                    <div class="board-column glass" id="col-todo">
+                        <div class="column-header">
+                            <div class="title-with-count">
+                                <h3>What I Have To Do</h3>
+                                <span class="column-count" id="count-todo">0</span>
+                            </div>
+                        </div>
+                        <div class="column-body board-dropzone" id="list-todo">
+                            <!-- Tasks appear here -->
+                        </div>
+                    </div>
+
+                    <!-- Column: In Progress -->
+                    <div class="board-column glass" id="col-progress">
+                        <div class="column-header">
+                            <div class="title-with-count">
+                                <h3>What I Am Doing</h3>
+                                <span class="column-count" id="count-progress">0</span>
+                            </div>
+                        </div>
+                        <div class="column-body board-dropzone" id="list-progress">
+                            <!-- Tasks appear here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Completed Log Tab -->
+            <section id="tab-history" class="tab-content">
+                <div class="history-container glass">
+                    <div class="history-header">
+                        <h3>Completed Work & History</h3>
+                        <p class="subtitle">A detailed record of everything you have finished, logged with timestamps and outcomes.</p>
+                    </div>
+                    <div class="history-filters">
+                        <div class="search-box">
+                            <i data-lucide="search"></i>
+                            <input type="text" id="history-search" placeholder="Search finished tasks...">
+                        </div>
+                    </div>
+                    <div class="history-list-wrapper">
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th>Task Title</th>
+                                    <th>Main Purpose / Description</th>
+                                    <th>Planned Time</th>
+                                    <th>Completed At</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-table-body">
+                                <!-- Completed tasks loaded here -->
+                            </tbody>
+                        </table>
+                        <div id="history-empty" class="empty-state">
+                            <i data-lucide="check-circle-2"></i>
+                            <p>No completed tasks found. Finish tasks on the dashboard or board to build your history log!</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Add/Edit Task Modal -->
+    <div class="modal-overlay" id="task-modal">
+        <div class="modal glass animate-modal">
+            <div class="modal-header">
+                <h3 id="modal-title">New Plan Configuration</h3>
+                <button class="btn-close" id="close-task-modal-btn">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <form id="task-form">
+                <input type="hidden" id="task-id">
+                <div class="form-group">
+                    <label for="task-title">Task Title</label>
+                    <input type="text" id="task-title" required placeholder="e.g. Code database schema, Workout">
+                </div>
+                <div class="form-group">
+                    <label for="task-desc">Main Purpose / Description</label>
+                    <textarea id="task-desc" required rows="3" placeholder="What is the objective? What does success look like?"></textarea>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="task-start">Start Time</label>
+                        <input type="time" id="task-start" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="task-end">End Time (Deadline)</label>
+                        <input type="time" id="task-end" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="task-status">Current Status</label>
+                    <select id="task-status">
+                        <option value="todo">What I have to do (To Do)</option>
+                        <option value="progress">What I am doing (In Progress)</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="task-reminder" checked>
+                    <label for="task-reminder">Set reminder notification for this task</label>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="cancel-task-btn">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="save-task-btn">Save Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Toast System -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
