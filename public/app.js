@@ -313,12 +313,15 @@ document.addEventListener('DOMContentLoaded', () => {
             // Edit existing
             const index = tasks.findIndex(t => t.id === taskId);
             if (index !== -1) {
-                const oldStatus = tasks[index].status;
                 tasks[index] = {
                     ...tasks[index],
                     title, desc, date, start, end, reminder
                 };
-                
+                fetch(`/api/tasks/${taskId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(tasks[index])
+                }).catch(() => {});
                 showToast('Plan Updated', `"${title}" has been modified successfully.`, 'info');
             }
         } else {
@@ -330,6 +333,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 reminder
             };
             tasks.push(newTask);
+            fetch('/api/tasks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newTask)
+            }).catch(() => {});
             showToast('Plan Scheduled', `"${title}" has been added to your schedule.`, 'success');
         }
 
@@ -399,6 +407,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const task = tasks.find(t => t.id === taskId);
         if (task) {
             task.status = 'progress';
+            fetch(`/api/tasks/${taskId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(task)
+            }).catch(() => {});
             showToast('Task In Progress', `You are now working on "${task.title}".`, 'info');
             saveTasks();
         }
@@ -409,6 +422,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (task) {
             task.status = 'completed';
             task.completedAt = new Date().toISOString();
+            fetch(`/api/tasks/${taskId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(task)
+            }).catch(() => {});
             showToast('Task Finished!', `Completed: "${task.title}". Saved to history.`, 'success');
             saveTasks();
         }
@@ -425,6 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const task = tasks.find(t => t.id === taskId);
         if (task && confirm(`Are you sure you want to remove "${task.title}"?`)) {
             tasks = tasks.filter(t => t.id !== taskId);
+            fetch(`/api/tasks/${taskId}`, { method: 'DELETE' }).catch(() => {});
             showToast('Task Removed', 'The scheduled item was deleted.', 'info');
             saveTasks();
         }
@@ -435,6 +454,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (task) {
             task.status = 'todo';
             delete task.completedAt;
+            fetch(`/api/tasks/${taskId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(task)
+            }).catch(() => {});
             showToast('Task Re-opened', `Moved "${task.title}" back to planning.`, 'info');
             saveTasks();
         }
@@ -479,6 +503,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         } else {
                             showToast('Task Re-scheduled', `Moved "${task.title}" back to To Do.`, 'info');
                         }
+                        fetch(`/api/tasks/${task.id}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(task)
+                        }).catch(() => {});
                         saveTasks();
                     }
                 }
@@ -1071,8 +1100,35 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    async function syncTasksWithAPI() {
+        try {
+            const res = await fetch('/api/tasks');
+            if (res.ok) {
+                const apiTasks = await res.json();
+                if (apiTasks && apiTasks.length > 0) {
+                    tasks = apiTasks;
+                    localStorage.setItem('aetherplan_tasks', JSON.stringify(tasks));
+                    renderApp();
+                    addTerminalLog('AetherAgent: Synced tasks with Go backend database.');
+                } else if (tasks && tasks.length > 0) {
+                    for (const t of tasks) {
+                        await fetch('/api/tasks', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(t)
+                        });
+                    }
+                    addTerminalLog('AetherAgent: Seeded database with local tasks.');
+                }
+            }
+        } catch (err) {
+            // Running offline or local static mode
+        }
+    }
+
     // Initial render
     bootTerminal();
     initThreeBG();
     renderApp();
+    syncTasksWithAPI();
 });
