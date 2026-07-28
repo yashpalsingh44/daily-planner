@@ -111,6 +111,10 @@
                         <i data-lucide="calendar"></i>
                         <input type="date" id="current-view-date">
                     </div>
+                    <button class="btn btn-secondary btn-full-day" id="open-full-day-btn" title="Plan Entire Day at Once with Routine Presets">
+                        <i data-lucide="sparkles"></i>
+                        <span>Plan Full Day</span>
+                    </button>
                     <button class="btn btn-primary btn-add-task" id="open-task-modal-btn">
                         <i data-lucide="plus"></i>
                         <span>New Plan</span>
@@ -421,6 +425,38 @@
                     <button type="submit" class="btn btn-primary" id="submit-auth-btn">Sign In</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Full Day Batch Routine Modal -->
+    <div class="modal-overlay hidden" id="full-day-modal">
+        <div class="modal glass animate-modal full-day-modal-box">
+            <div class="modal-header">
+                <h3>⚡ Full Day Routine Planner</h3>
+                <button class="btn-close" id="close-full-day-modal-btn">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body full-day-body">
+                <p class="full-day-subtitle">Select a pre-configured full day routine suite or batch schedule to apply to your calendar in 1-click.</p>
+                <div class="routine-picker-tabs">
+                    <button class="routine-tab active" data-routine="workday">💼 Workday Suite</button>
+                    <button class="routine-tab" data-routine="student">🎓 Student Study</button>
+                    <button class="routine-tab" data-routine="weekend">🌿 Weekend Rest</button>
+                </div>
+                <div class="form-group" style="margin-top:14px;">
+                    <label for="full-day-target-date">Apply Schedule To Date</label>
+                    <input type="date" id="full-day-target-date">
+                </div>
+                <div class="routine-preview-container">
+                    <h4 class="preview-title">Scheduled Time-Blocks Preview</h4>
+                    <div class="routine-preview-list" id="routine-preview-list"></div>
+                </div>
+                <div class="modal-actions" style="margin-top:16px;">
+                    <button type="button" class="btn btn-secondary" id="cancel-full-day-btn">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="apply-full-day-btn">⚡ Apply Full Day Schedule</button>
+                </div>
+            </div>
         </div>
     </div>
 

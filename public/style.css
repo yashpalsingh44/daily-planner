@@ -1853,3 +1853,104 @@ body.light-theme .auth-tabs {
         grid-template-columns: 1fr;
     }
 }
+
+/* Full Day Planner Modal & Routine Presets */
+.btn-full-day {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(79, 70, 229, 0.25));
+    border: 1px solid rgba(139, 92, 246, 0.35);
+    color: var(--primary-color);
+}
+.btn-full-day:hover {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(79, 70, 229, 0.35));
+    border-color: var(--primary-color);
+}
+
+.full-day-modal-box {
+    max-width: 580px !important;
+}
+
+.full-day-body {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.full-day-subtitle {
+    font-size: 0.86rem;
+    color: var(--text-secondary);
+}
+
+.routine-picker-tabs {
+    display: flex;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.05);
+    padding: 4px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.routine-tab {
+    flex: 1;
+    padding: 8px 12px;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.routine-tab.active {
+    background: var(--primary-color);
+    color: #ffffff;
+    box-shadow: 0 2px 8px var(--primary-glow);
+}
+
+.routine-preview-container {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.preview-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+}
+
+.routine-preview-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.routine-preview-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 0.84rem;
+}
+
+.routine-preview-time {
+    font-weight: 600;
+    color: var(--accent-color);
+    font-size: 0.8rem;
+}
+
+.routine-preview-title {
+    font-weight: 600;
+    color: var(--text-primary);
+}

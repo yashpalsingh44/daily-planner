@@ -421,6 +421,135 @@ document.addEventListener('DOMContentLoaded', () => {
         saveTasks();
     });
 
+    // --- FULL DAY ROUTINE & BATCH PLANNER ENGINE ---
+    const fullDayPresets = {
+        workday: [
+            { title: "Morning Meditation & Daily Planning", desc: "Mindfulness and list key objectives in calendar.", start: "07:30", end: "08:00", reminder: true },
+            { title: "Deep Work Sprint: Core Feature Build", desc: "Uninterrupted focus session on key deliverables.", start: "09:00", end: "11:00", reminder: true },
+            { title: "Team Standup Sync", desc: "Align on daily objectives and address blockers.", start: "11:00", end: "11:30", reminder: true },
+            { title: "Lunch & Cognitive Refresh", desc: "Healthy meal and brief outdoor walk.", start: "13:00", end: "14:00", reminder: true },
+            { title: "Code Review & Architecture Sync", desc: "Inspect pull requests and review design specs.", start: "14:30", end: "16:00", reminder: false },
+            { title: "Fitness / Workout", desc: "Physical exercise session.", start: "17:30", end: "18:30", reminder: true },
+            { title: "Daily Review & Evening Wrap-up", desc: "Review progress and archive completed tasks.", start: "19:00", end: "19:30", reminder: false }
+        ],
+        student: [
+            { title: "Morning Reading & Notes", desc: "Read textbook chapters and summarize key concepts.", start: "08:00", end: "09:30", reminder: true },
+            { title: "Lecture Sprint & Video Notes", desc: "Watch online course modules and compile notes.", start: "10:00", end: "11:30", reminder: true },
+            { title: "Problem Solving & Practice Sets", desc: "Solve practice problem sets and quizzes.", start: "12:00", end: "13:00", reminder: true },
+            { title: "Lunch Break", desc: "Relaxation and meal break.", start: "13:30", end: "14:30", reminder: false },
+            { title: "Assignment Workshop", desc: "Draft essay responses and lab reports.", start: "15:00", end: "17:00", reminder: true },
+            { title: "Exercise & Outdoor Activity", desc: "Cardio workout and fresh air.", start: "18:00", end: "19:00", reminder: true },
+            { title: "Evening Revision & Flashcards", desc: "Spaced repetition review of today's topics.", start: "20:00", end: "21:00", reminder: false }
+        ],
+        weekend: [
+            { title: "Morning Jog & Fresh Air", desc: "Outdoor run to boost endorphins and energy.", start: "08:30", end: "09:30", reminder: true },
+            { title: "Healthy Weekend Brunch", desc: "Nutritious meal and coffee.", start: "10:30", end: "11:30", reminder: false },
+            { title: "Personal Creative Project", desc: "Hobby coding, writing, or artistic design.", start: "12:00", end: "14:30", reminder: true },
+            { title: "Outdoor Social & Park Walk", desc: "Meet friends or visit nature trail.", start: "15:00", end: "17:30", reminder: false },
+            { title: "Family Dinner & Movie Night", desc: "Unwind and relax for the upcoming week.", start: "19:00", end: "21:30", reminder: false }
+        ]
+    };
+
+    const fullDayModal = document.getElementById('full-day-modal');
+    const openFullDayBtn = document.getElementById('open-full-day-btn');
+    const closeFullDayBtn = document.getElementById('close-full-day-modal-btn');
+    const cancelFullDayBtn = document.getElementById('cancel-full-day-btn');
+    const applyFullDayBtn = document.getElementById('apply-full-day-btn');
+    const fullDayTargetDateInput = document.getElementById('full-day-target-date');
+    const routinePreviewList = document.getElementById('routine-preview-list');
+    const routineTabs = document.querySelectorAll('.routine-tab');
+
+    let activeRoutineKey = 'workday';
+
+    function renderRoutinePreview(routineKey) {
+        activeRoutineKey = routineKey;
+        const presetItems = fullDayPresets[routineKey] || [];
+        if (!routinePreviewList) return;
+        routinePreviewList.innerHTML = '';
+
+        presetItems.forEach(item => {
+            const row = document.createElement('div');
+            row.className = 'routine-preview-item';
+            row.innerHTML = `
+                <span class="routine-preview-time">${getFormattedTime(item.start)} - ${getFormattedTime(item.end)}</span>
+                <span class="routine-preview-title">${item.title}</span>
+            `;
+            routinePreviewList.appendChild(row);
+        });
+
+        routineTabs.forEach(tab => {
+            if (tab.getAttribute('data-routine') === routineKey) {
+                tab.classList.add('active');
+            } else {
+                tab.classList.remove('active');
+            }
+        });
+    }
+
+    function openFullDayModal() {
+        if (!fullDayModal) return;
+        if (fullDayTargetDateInput) fullDayTargetDateInput.value = selectedDate;
+        renderRoutinePreview('workday');
+        fullDayModal.classList.remove('hidden');
+        fullDayModal.classList.add('active');
+    }
+
+    function closeFullDayModal() {
+        if (!fullDayModal) return;
+        fullDayModal.classList.add('hidden');
+        fullDayModal.classList.remove('active');
+    }
+
+    if (openFullDayBtn) openFullDayBtn.addEventListener('click', openFullDayModal);
+    if (closeFullDayBtn) closeFullDayBtn.addEventListener('click', closeFullDayModal);
+    if (cancelFullDayBtn) cancelFullDayBtn.addEventListener('click', closeFullDayModal);
+
+    routineTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const key = tab.getAttribute('data-routine');
+            renderRoutinePreview(key);
+        });
+    });
+
+    if (applyFullDayBtn) {
+        applyFullDayBtn.addEventListener('click', () => {
+            const targetDate = fullDayTargetDateInput.value || selectedDate;
+            const presetItems = fullDayPresets[activeRoutineKey] || [];
+
+            if (presetItems.length === 0) return;
+
+            // Remove existing non-completed tasks for target date
+            tasks = tasks.filter(t => t.date !== targetDate || t.status === 'completed');
+
+            presetItems.forEach((item, index) => {
+                const newTask = {
+                    id: `fullday_${Date.now()}_${index}`,
+                    title: item.title,
+                    desc: item.desc,
+                    date: targetDate,
+                    start: item.start,
+                    end: item.end,
+                    status: 'todo',
+                    reminder: item.reminder,
+                    recurrence: 'none'
+                };
+                tasks.push(newTask);
+                fetch('/api/tasks', {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(newTask)
+                }).catch(() => {});
+            });
+
+            closeFullDayModal();
+            selectedDate = targetDate;
+            if (currentViewDateInput) currentViewDateInput.value = targetDate;
+            saveTasks();
+            showToast('Full Day Plan Applied! ⚡', `Generated ${presetItems.length} scheduled plans for ${targetDate}.`, 'success');
+            addTerminalLog(`ChronosAgent: Applied '${activeRoutineKey}' full day schedule for ${targetDate}.`);
+        });
+    }
+
     // Helper functions
     function timeToMinutes(timeStr) {
         const [h, m] = timeStr.split(':').map(Number);
