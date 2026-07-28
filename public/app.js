@@ -460,29 +460,94 @@ document.addEventListener('DOMContentLoaded', () => {
     const routineTabs = document.querySelectorAll('.routine-tab');
 
     let activeRoutineKey = 'workday';
+    let currentEditableRoutine = [];
 
     function renderRoutinePreview(routineKey) {
-        activeRoutineKey = routineKey;
-        const presetItems = fullDayPresets[routineKey] || [];
+        if (routineKey) {
+            activeRoutineKey = routineKey;
+            const presetItems = fullDayPresets[routineKey] || [];
+            currentEditableRoutine = JSON.parse(JSON.stringify(presetItems));
+        }
+
         if (!routinePreviewList) return;
         routinePreviewList.innerHTML = '';
 
-        presetItems.forEach(item => {
-            const row = document.createElement('div');
-            row.className = 'routine-preview-item';
-            row.innerHTML = `
-                <span class="routine-preview-time">${getFormattedTime(item.start)} - ${getFormattedTime(item.end)}</span>
-                <span class="routine-preview-title">${item.title}</span>
+        if (currentEditableRoutine.length === 0) {
+            routinePreviewList.innerHTML = `
+                <div class="empty-state small" style="padding:16px;">
+                    <p style="font-size:0.82rem; color:var(--text-muted)">No activities in schedule. Click "+ Add Activity Slot" above to add one!</p>
+                </div>
             `;
-            routinePreviewList.appendChild(row);
+        } else {
+            currentEditableRoutine.forEach((item, index) => {
+                const row = document.createElement('div');
+                row.className = 'routine-edit-item';
+                row.innerHTML = `
+                    <input type="time" value="${item.start}" data-field="start" data-index="${index}" title="Start Time">
+                    <span style="color:var(--text-muted); font-size:0.8rem;">-</span>
+                    <input type="time" value="${item.end}" data-field="end" data-index="${index}" title="End Time">
+                    <input type="text" value="${item.title}" data-field="title" data-index="${index}" placeholder="Activity title...">
+                    <button type="button" class="btn-icon btn-icon-danger" data-index="${index}" data-action="delete-slot" title="Remove Activity">
+                        <i data-lucide="trash-2"></i>
+                    </button>
+                `;
+                routinePreviewList.appendChild(row);
+            });
+        }
+
+        updateIcons();
+
+        // Attach input listeners for live editing
+        const inputs = routinePreviewList.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('input', (e) => {
+                const idx = parseInt(e.target.getAttribute('data-index'));
+                const field = e.target.getAttribute('data-field');
+                if (currentEditableRoutine[idx]) {
+                    currentEditableRoutine[idx][field] = e.target.value;
+                }
+            });
+        });
+
+        // Attach delete slot listeners
+        const deleteBtns = routinePreviewList.querySelectorAll('[data-action="delete-slot"]');
+        deleteBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const idx = parseInt(btn.getAttribute('data-index'));
+                currentEditableRoutine.splice(idx, 1);
+                renderRoutinePreview(null);
+            });
         });
 
         routineTabs.forEach(tab => {
-            if (tab.getAttribute('data-routine') === routineKey) {
+            if (tab.getAttribute('data-routine') === activeRoutineKey) {
                 tab.classList.add('active');
             } else {
                 tab.classList.remove('active');
             }
+        });
+    }
+
+    const addRoutineSlotBtn = document.getElementById('add-routine-slot-btn');
+    if (addRoutineSlotBtn) {
+        addRoutineSlotBtn.addEventListener('click', () => {
+            let lastStart = '12:00';
+            let lastEnd = '13:00';
+            if (currentEditableRoutine.length > 0) {
+                const lastItem = currentEditableRoutine[currentEditableRoutine.length - 1];
+                lastStart = lastItem.end || '12:00';
+                const [h, m] = lastStart.split(':').map(Number);
+                lastEnd = `${String((h + 1) % 24).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+            }
+
+            currentEditableRoutine.push({
+                title: 'New Custom Activity',
+                desc: 'Full day planned task slot.',
+                start: lastStart,
+                end: lastEnd,
+                reminder: true
+            });
+            renderRoutinePreview(null);
         });
     }
 
@@ -514,23 +579,24 @@ document.addEventListener('DOMContentLoaded', () => {
     if (applyFullDayBtn) {
         applyFullDayBtn.addEventListener('click', () => {
             const targetDate = fullDayTargetDateInput.value || selectedDate;
-            const presetItems = fullDayPresets[activeRoutineKey] || [];
-
-            if (presetItems.length === 0) return;
+            if (currentEditableRoutine.length === 0) {
+                showToast('No Activities to Apply', 'Please add at least one activity slot.', 'alert');
+                return;
+            }
 
             // Remove existing non-completed tasks for target date
             tasks = tasks.filter(t => t.date !== targetDate || t.status === 'completed');
 
-            presetItems.forEach((item, index) => {
+            currentEditableRoutine.forEach((item, index) => {
                 const newTask = {
                     id: `fullday_${Date.now()}_${index}`,
-                    title: item.title,
-                    desc: item.desc,
+                    title: item.title || 'Untitled Plan',
+                    desc: item.desc || 'Full day planned activity.',
                     date: targetDate,
-                    start: item.start,
-                    end: item.end,
+                    start: item.start || '09:00',
+                    end: item.end || '10:00',
                     status: 'todo',
-                    reminder: item.reminder,
+                    reminder: item.reminder !== undefined ? item.reminder : true,
                     recurrence: 'none'
                 };
                 tasks.push(newTask);
@@ -545,8 +611,8 @@ document.addEventListener('DOMContentLoaded', () => {
             selectedDate = targetDate;
             if (currentViewDateInput) currentViewDateInput.value = targetDate;
             saveTasks();
-            showToast('Full Day Plan Applied! ⚡', `Generated ${presetItems.length} scheduled plans for ${targetDate}.`, 'success');
-            addTerminalLog(`ChronosAgent: Applied '${activeRoutineKey}' full day schedule for ${targetDate}.`);
+            showToast('Full Day Plan Applied! ⚡', `Scheduled ${currentEditableRoutine.length} customized activities for ${targetDate}.`, 'success');
+            addTerminalLog(`ChronosAgent: Applied ${currentEditableRoutine.length} customized activities for ${targetDate}.`);
         });
     }
 
