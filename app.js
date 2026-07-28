@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
             id: 'task-1',
             title: 'Morning Meditation & Planning',
             desc: 'Start the day with mindfulness and list key objectives in the calendar.',
+            date: '2026-07-28',
             start: '07:30',
             end: '08:00',
             status: 'completed',
@@ -15,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
             id: 'task-2',
             title: 'Review Dashboard Prototypes',
             desc: 'Examine frontend layout designs, color harmony, gradients, and responsiveness rules.',
+            date: '2026-07-28',
             start: '09:00',
             end: '11:00',
             status: 'completed',
@@ -25,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
             id: 'task-3',
             title: 'AetherPlan Core Frontend Implementation',
             desc: 'Develop HTML structure, custom CSS glassmorphism, and interactive JavaScript features.',
+            date: '2026-07-28',
             start: '11:00',
             end: '13:00',
             status: 'progress',
@@ -34,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
             id: 'task-4',
             title: 'Lunch Break & Relax',
             desc: 'Healthy meal and a brief outdoor walk to recharge cognitive focus.',
+            date: '2026-07-28',
             start: '13:00',
             end: '14:00',
             status: 'todo',
@@ -43,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
             id: 'task-5',
             title: 'Git Repository & GitHub Push',
             desc: 'Initialize git locally, link to user\'s remote repository, and push files.',
+            date: '2026-07-28',
             start: '14:30',
             end: '15:30',
             status: 'todo',
@@ -52,6 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
             id: 'task-6',
             title: 'Client Progress Review Sync',
             desc: 'Gather user feedback on Phase 1 UI design and align on database schema details.',
+            date: '2026-07-28',
             start: '16:00',
             end: '17:00',
             status: 'todo',
@@ -59,10 +65,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     ];
 
+    // Get current date string in YYYY-MM-DD local format
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const todayStr = `${year}-${month}-${day}`;
+
     // State Management
     let tasks = JSON.parse(localStorage.getItem('aetherplan_tasks')) || defaultTasks;
+    let selectedDate = todayStr;
     let activeTab = 'dashboard';
     let remindersTriggered = JSON.parse(localStorage.getItem('aetherplan_triggered_reminders')) || [];
+
+    // Migration/Ensure date exists
+    tasks.forEach(t => {
+        if (!t.date) t.date = todayStr;
+    });
 
     // Elements Cache
     const navItems = document.querySelectorAll('.nav-item');
@@ -71,6 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const digitalDate = document.getElementById('digital-date');
     const greetingEl = document.getElementById('greeting');
     const themeToggleBtn = document.getElementById('theme-toggle-btn');
+    const currentViewDateInput = document.getElementById('current-view-date');
     
     // Modal Elements
     const taskModal = document.getElementById('task-modal');
@@ -143,6 +163,16 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         document.body.classList.remove('light-theme');
         document.body.classList.add('dark-theme');
+    }
+
+    // Initialize current view date listener
+    if (currentViewDateInput) {
+        currentViewDateInput.value = selectedDate;
+        currentViewDateInput.addEventListener('change', (e) => {
+            selectedDate = e.target.value;
+            addTerminalLog(`AetherAgent: Switched active view to date ${selectedDate}.`);
+            renderApp();
+        });
     }
 
     // Navigation Handler
@@ -234,9 +264,9 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('task-id').value = taskToEdit.id;
             document.getElementById('task-title').value = taskToEdit.title;
             document.getElementById('task-desc').value = taskToEdit.desc;
+            document.getElementById('task-date').value = taskToEdit.date || selectedDate;
             document.getElementById('task-start').value = taskToEdit.start;
             document.getElementById('task-end').value = taskToEdit.end;
-            document.getElementById('task-status').value = taskToEdit.status;
             document.getElementById('task-reminder').checked = taskToEdit.reminder;
         } else {
             document.getElementById('modal-title').textContent = 'New Plan Configuration';
@@ -249,9 +279,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const startMin = String(now.getMinutes()).padStart(2, '0');
             const endHour = String((now.getHours() + 1) % 24).padStart(2, '0');
             
+            document.getElementById('task-date').value = selectedDate;
             document.getElementById('task-start').value = `${startHour}:${startMin}`;
             document.getElementById('task-end').value = `${endHour}:${startMin}`;
-            document.getElementById('task-status').value = 'todo';
             document.getElementById('task-reminder').checked = true;
         }
     }
@@ -268,9 +298,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const taskId = document.getElementById('task-id').value;
         const title = document.getElementById('task-title').value;
         const desc = document.getElementById('task-desc').value;
+        const date = document.getElementById('task-date').value;
         const start = document.getElementById('task-start').value;
         const end = document.getElementById('task-end').value;
-        const status = document.getElementById('task-status').value;
         const reminder = document.getElementById('task-reminder').checked;
 
         // Validation
@@ -286,27 +316,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 const oldStatus = tasks[index].status;
                 tasks[index] = {
                     ...tasks[index],
-                    title, desc, start, end, status, reminder
+                    title, desc, date, start, end, reminder
                 };
-                
-                // Add completed timestamp if changed to completed
-                if (status === 'completed' && oldStatus !== 'completed') {
-                    tasks[index].completedAt = new Date().toISOString();
-                } else if (status !== 'completed') {
-                    delete tasks[index].completedAt;
-                }
                 
                 showToast('Plan Updated', `"${title}" has been modified successfully.`, 'info');
             }
         } else {
-            // Create new
+            // Create new (defaults status to 'todo')
             const newTask = {
                 id: 'task_' + Date.now(),
-                title, desc, start, end, status, reminder
+                title, desc, date, start, end,
+                status: 'todo',
+                reminder
             };
-            if (status === 'completed') {
-                newTask.completedAt = new Date().toISOString();
-            }
             tasks.push(newTask);
             showToast('Plan Scheduled', `"${title}" has been added to your schedule.`, 'success');
         }
@@ -466,11 +488,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // MAIN RENDER APP PIPELINE
     function renderApp() {
+        // Filter tasks for the selected date
+        const dailyTasks = tasks.filter(t => t.date === selectedDate);
+
         // --- 1. STATS CALCULATION ---
-        const total = tasks.length;
-        const todoCount = tasks.filter(t => t.status === 'todo').length;
-        const progressCount = tasks.filter(t => t.status === 'progress').length;
-        const completedCount = tasks.filter(t => t.status === 'completed').length;
+        const total = dailyTasks.length;
+        const todoCount = dailyTasks.filter(t => t.status === 'todo').length;
+        const progressCount = dailyTasks.filter(t => t.status === 'progress').length;
+        const completedCount = dailyTasks.filter(t => t.status === 'completed').length;
         const percent = total > 0 ? Math.round((completedCount / total) * 100) : 0;
 
         // Render circular progress svg
@@ -499,11 +524,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentMin = timeToMinutes(currentTimeStr);
 
         // Find current activity: a task in progress OR active task within time range
-        let ongoingTask = tasks.find(t => t.status === 'progress');
+        let ongoingTask = dailyTasks.find(t => t.status === 'progress');
         
         // If nothing explicitly marked in progress, check timelines
         if (!ongoingTask) {
-            ongoingTask = tasks.find(t => {
+            ongoingTask = dailyTasks.find(t => {
                 const startM = timeToMinutes(t.start);
                 const endM = timeToMinutes(t.end);
                 return currentMin >= startM && currentMin <= endM && t.status !== 'completed';
@@ -545,7 +570,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Find Next Up Plan: any plan starting in future, not completed, sort by start time
-        const futurePlans = tasks
+        const futurePlans = dailyTasks
             .filter(t => t.status !== 'completed' && t.id !== (ongoingTask ? ongoingTask.id : ''))
             .sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start));
         
@@ -582,7 +607,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const miniTimelineList = document.getElementById('mini-timeline-list');
         miniTimelineList.innerHTML = '';
         
-        const sortedTodayTasks = [...tasks].sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start));
+        const sortedTodayTasks = [...dailyTasks].sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start));
         
         if (sortedTodayTasks.length === 0) {
             miniTimelineList.innerHTML = `
@@ -626,7 +651,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- 4. RENDER REMINDERS PANEL ---
         const remindersContainer = document.getElementById('reminders-container');
         remindersContainer.innerHTML = '';
-        const remindersTasks = tasks.filter(t => t.reminder && t.status !== 'completed');
+        const remindersTasks = dailyTasks.filter(t => t.reminder && t.status !== 'completed');
 
         if (remindersTasks.length === 0) {
             remindersContainer.innerHTML = `
@@ -670,7 +695,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tasksCol.className = 'timeline-tasks-col';
             
             // Find tasks that start inside this hour slot
-            const hourTasks = tasks.filter(t => {
+            const hourTasks = dailyTasks.filter(t => {
                 const taskStartHour = parseInt(t.start.split(':')[0]);
                 return taskStartHour === hour;
             });
@@ -709,8 +734,8 @@ document.addEventListener('DOMContentLoaded', () => {
         listTodo.innerHTML = '';
         listProgress.innerHTML = '';
 
-        const todoTasks = tasks.filter(t => t.status === 'todo');
-        const progressTasks = tasks.filter(t => t.status === 'progress');
+        const todoTasks = dailyTasks.filter(t => t.status === 'todo');
+        const progressTasks = dailyTasks.filter(t => t.status === 'progress');
 
         if (todoTasks.length === 0) {
             listTodo.innerHTML = `

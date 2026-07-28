@@ -451,6 +451,40 @@ body.light-theme .moon-icon {
     gap: 20px;
 }
 
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.header-date-picker {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.header-date-picker i {
+    width: 16px;
+    height: 16px;
+    color: var(--primary-color);
+}
+
+.header-date-picker input[type="date"] {
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-family: inherit;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+}
+
 .welcome-text h2 {
     font-size: 1.85rem;
     font-weight: 700;
