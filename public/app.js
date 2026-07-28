@@ -1345,7 +1345,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     showToast('Authenticated', `Welcome, ${currentUser.username}!`, 'success');
                     addTerminalLog(`AetherAgent: Authenticated user '${currentUser.username}'.`);
                 } else {
-                    const errText = await res.text();
+                    let errText = await res.text();
+                    if (errText.includes('<!DOCTYPE') || errText.includes('<html')) {
+                        errText = `Server error (${res.status}). Please ensure backend API server is running.`;
+                    }
                     if (authErrorMsg) {
                         authErrorMsg.textContent = errText || 'Authentication failed.';
                         authErrorMsg.classList.remove('hidden');
