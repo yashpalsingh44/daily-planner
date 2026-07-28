@@ -260,6 +260,108 @@ body.light-theme .nav-item:hover {
     transform: scale(1.1);
 }
 
+/* Agent Console Terminal Widget */
+.agent-terminal {
+    background: rgba(5, 5, 8, 0.7);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    margin: 16px 0;
+    overflow: hidden;
+    font-family: 'Courier New', Courier, monospace;
+    display: flex;
+    flex-direction: column;
+}
+
+body.light-theme .agent-terminal {
+    background: rgba(240, 244, 248, 0.7);
+}
+
+.terminal-header {
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid var(--border-color);
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+body.light-theme .terminal-header {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+.terminal-dots {
+    display: flex;
+    gap: 4px;
+}
+
+.terminal-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.terminal-dot.red { background: var(--danger-color); }
+.terminal-dot.yellow { background: var(--warning-color); }
+.terminal-dot.green { background: var(--completed-color); }
+
+.terminal-title {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.terminal-body {
+    padding: 10px 12px;
+    height: 85px;
+    overflow-y: auto;
+    font-size: 0.7rem;
+    line-height: 1.4;
+    color: var(--accent-color);
+}
+
+body.light-theme .terminal-body {
+    color: var(--primary-color);
+}
+
+.log-line {
+    display: block;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0.85;
+    animation: typeIn 0.3s ease;
+}
+
+@keyframes typeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 0.85; transform: translateY(0); }
+}
+
+/* Pulsing visual effects for active cards */
+#list-progress .board-task-card,
+.timeline-task-block.progress {
+    border-left-color: var(--accent-color) !important;
+    animation: cardPulse 3s infinite ease-in-out;
+}
+
+@keyframes cardPulse {
+    0% {
+        box-shadow: 0 0 4px rgba(20, 184, 166, 0.1);
+    }
+    50% {
+        box-shadow: 0 0 12px rgba(20, 184, 166, 0.3);
+        border-color: rgba(20, 184, 166, 0.6);
+    }
+    100% {
+        box-shadow: 0 0 4px rgba(20, 184, 166, 0.1);
+    }
+}
+
 /* Sidebar Footer Widgets */
 .sidebar-footer {
     display: flex;

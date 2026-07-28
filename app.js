@@ -844,6 +844,64 @@ document.addEventListener('DOMContentLoaded', () => {
         renderApp();
     });
 
+    // --- AGENT CONSOLE LOGGER ---
+    const terminalLogsContainer = document.getElementById('terminal-logs');
+    const agentLogDb = [
+        "AetherAgent: Scanning timeline tasks...",
+        "AetherAgent: Real-time reminder checker active.",
+        "AetherAgent: Checking notification permission status: OK.",
+        "AetherAgent: Predicting task priority weights...",
+        "AetherAgent: Caching data to local store...",
+        "AetherAgent: Local storage validation: Stable.",
+        "AetherAgent: Watching board state for drag activities...",
+        "AetherAgent: Analysis index generated for today.",
+        "AetherAgent: Evaluating daily performance percentage...",
+        "AetherAgent: Standby mode active. Waiting for schedule updates..."
+    ];
+
+    function addTerminalLog(text) {
+        if (!terminalLogsContainer) return;
+        const now = new Date();
+        const timeStr = now.toTimeString().split(' ')[0]; // HH:MM:SS
+        const logLine = document.createElement('span');
+        logLine.className = 'log-line';
+        logLine.innerHTML = `<span style="color:var(--text-muted)">[${timeStr}]</span> ${text}`;
+        
+        terminalLogsContainer.appendChild(logLine);
+        
+        // Scroll to bottom
+        terminalLogsContainer.scrollTop = terminalLogsContainer.scrollHeight;
+
+        // Keep maximum 25 logs to prevent memory leaks
+        while (terminalLogsContainer.children.length > 25) {
+            terminalLogsContainer.removeChild(terminalLogsContainer.firstChild);
+        }
+    }
+
+    // Initialize with boot logs
+    function bootTerminal() {
+        const bootSequence = [
+            "AetherPlan Core Engine: Booting...",
+            "AetherPlan: Mounting responsive styles...",
+            "AetherAgent Subagent System: INITIALIZED.",
+            "AetherAgent: Monitoring workspace directory: 'c:/laragon/www/daily planner'",
+            "AetherAgent: Connected to client browser event loop.",
+            "AetherAgent: Ready to set reminders."
+        ];
+
+        bootSequence.forEach((log, index) => {
+            setTimeout(() => {
+                addTerminalLog(log);
+            }, index * 800);
+        });
+
+        // Start random periodic updates
+        setInterval(() => {
+            const randomIndex = Math.floor(Math.random() * agentLogDb.length);
+            addTerminalLog(agentLogDb[randomIndex]);
+        }, 12000);
+    }
+
     // Start App Clock and trigger first renders
     updateClock();
     setInterval(updateClock, 1000);
@@ -853,5 +911,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(checkReminders, 10000);
 
     // Initial render
+    bootTerminal();
     renderApp();
 });
