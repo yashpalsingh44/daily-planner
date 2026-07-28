@@ -986,16 +986,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- AGENT CONSOLE LOGGER ---
     const terminalLogsContainer = document.getElementById('terminal-logs');
     const agentLogDb = [
-        "AetherAgent: Scanning timeline tasks...",
-        "AetherAgent: Real-time reminder checker active.",
-        "AetherAgent: Checking notification permission status: OK.",
-        "AetherAgent: Predicting task priority weights...",
-        "AetherAgent: Caching data to local store...",
-        "AetherAgent: Local storage validation: Stable.",
-        "AetherAgent: Watching board state for drag activities...",
-        "AetherAgent: Analysis index generated for today.",
-        "AetherAgent: Evaluating daily performance percentage...",
-        "AetherAgent: Standby mode active. Waiting for schedule updates..."
+        "ChronosAgent: Scanning timeline tasks...",
+        "ChronosAgent: Real-time reminder checker active.",
+        "ChronosAgent: Checking notification permission status: OK.",
+        "ChronosAgent: Predicting task priority weights...",
+        "ChronosAgent: Caching data to local store...",
+        "ChronosAgent: Local storage validation: Stable.",
+        "ChronosAgent: Watching board state for drag activities...",
+        "ChronosAgent: Analysis index generated for today.",
+        "ChronosAgent: Evaluating daily performance percentage...",
+        "ChronosAgent: Standby mode active. Waiting for schedule updates..."
     ];
 
     function addTerminalLog(text) {
@@ -1020,12 +1020,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize with boot logs
     function bootTerminal() {
         const bootSequence = [
-            "AetherPlan Core Engine: Booting...",
-            "AetherPlan: Mounting responsive styles...",
-            "AetherAgent Subagent System: INITIALIZED.",
-            "AetherAgent: Monitoring workspace directory: 'c:/laragon/www/daily planner'",
-            "AetherAgent: Connected to client browser event loop.",
-            "AetherAgent: Ready to set reminders."
+            "ChronosPlan Core Engine: Booting...",
+            "ChronosPlan: Mounting responsive styles...",
+            "ChronosAgent Subagent System: INITIALIZED.",
+            "ChronosAgent: Monitoring workspace directory: 'c:/laragon/www/daily planner'",
+            "ChronosAgent: Connected to client browser event loop.",
+            "ChronosAgent: Ready to set reminders."
         ];
 
         bootSequence.forEach((log, index) => {

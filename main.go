@@ -614,7 +614,7 @@ func sseHandler(w http.ResponseWriter, r *http.Request) {
 	// Send welcome connection message
 	welcomeEvent := EventPayload{
 		Type:    "connection",
-		Message: "Connected to AetherPlan SSE Event Stream",
+		Message: "Connected to ChronosPlan SSE Event Stream",
 		Time:    time.Now().Format("15:04:05"),
 	}
 	welcomeJSON, _ := json.Marshal(welcomeEvent)
@@ -643,7 +643,7 @@ func testReminderHandler(w http.ResponseWriter, r *http.Request) {
 		ID:       "task_test",
 		UserID:   userID,
 		Title:    "⚡ Test Live Reminder Alert",
-		Desc:     "This is a test notification generated from AetherPlan SSE Server daemon.",
+		Desc:     "This is a test notification generated from ChronosPlan SSE Server daemon.",
 		Date:     time.Now().Format("2006-01-02"),
 		Start:    time.Now().Format("15:04"),
 		End:      time.Now().Add(30 * time.Minute).Format("15:04"),
@@ -687,7 +687,7 @@ func startReminderDaemon() {
 				var completedAt string
 				if err := rows.Scan(&t.ID, &t.UserID, &t.Title, &t.Desc, &t.Date, &t.Start, &t.End, &t.Status, &t.Reminder, &completedAt); err == nil {
 					t.CompletedAt = completedAt
-					log.Printf("[AetherAgent Daemon] ALERT REMINDER: Task '%s' (User: %s) is starting now at %s!", t.Title, t.UserID, timeStr)
+					log.Printf("[ChronosAgent Daemon] ALERT REMINDER: Task '%s' (User: %s) is starting now at %s!", t.Title, t.UserID, timeStr)
 
 					// Broadcast real-time SSE event
 					event := EventPayload{
@@ -734,7 +734,7 @@ func main() {
 		port = "8080"
 	}
 
-	fmt.Printf("\n🚀 AetherPlan Go Server running at http://localhost:%s\n", port)
+	fmt.Printf("\n🚀 ChronosPlan Go Server running at http://localhost:%s\n", port)
 	fmt.Printf("📁 Serving frontend static assets from ./public\n")
 	fmt.Printf("🔐 Auth Endpoints: /api/auth/register, /api/auth/login, /api/auth/me\n")
 	fmt.Printf("📡 SSE Real-Time Event Stream at http://localhost:%s/api/events\n", port)
