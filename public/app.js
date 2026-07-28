@@ -1566,6 +1566,141 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- 3D THREE.JS MOTION WAVE BACKGROUND ENGINE ---
+    function initThreeBG() {
+        const canvas = document.getElementById('three-bg-canvas');
+        if (!canvas || !window.THREE) return;
+
+        const SEPARATION = 35;
+        const AMOUNTX = 45;
+        const AMOUNTY = 35;
+
+        let camera, scene, renderer;
+        let particles, count = 0;
+        let mouseX = 0, mouseY = 0;
+        let windowHalfX = window.innerWidth / 2;
+        let windowHalfY = window.innerHeight / 2;
+
+        try {
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
+            camera.position.set(0, 350, 1100);
+            camera.lookAt(0, 0, 0);
+
+            scene = new THREE.Scene();
+
+            const numParticles = AMOUNTX * AMOUNTY;
+            const positions = new Float32Array(numParticles * 3);
+            const scales = new Float32Array(numParticles);
+            const colors = new Float32Array(numParticles * 3);
+
+            let i = 0, j = 0;
+            for (let ix = 0; ix < AMOUNTX; ix++) {
+                for (let iy = 0; iy < AMOUNTY; iy++) {
+                    positions[i] = ix * SEPARATION - ((AMOUNTX * SEPARATION) / 2);
+                    positions[i + 1] = 0;
+                    positions[i + 2] = iy * SEPARATION - ((AMOUNTY * SEPARATION) / 2);
+
+                    scales[j] = 3;
+
+                    // Neon HSL Gradient (violet indigo to bright cyan teal)
+                    const color = new THREE.Color();
+                    color.setHSL(0.65 + (ix / AMOUNTX) * 0.25, 0.85, 0.6);
+                    colors[i] = color.r;
+                    colors[i + 1] = color.g;
+                    colors[i + 2] = color.b;
+
+                    i += 3;
+                    j++;
+                }
+            }
+
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('scale', new THREE.BufferAttribute(scales, 1));
+            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+            const material = new THREE.ShaderMaterial({
+                uniforms: {
+                    pointTexture: { value: null }
+                },
+                vertexShader: `
+                    attribute float scale;
+                    attribute vec3 color;
+                    varying vec3 vColor;
+                    void main() {
+                        vColor = color;
+                        vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+                        gl_PointSize = scale * ( 300.0 / -mvPosition.z );
+                        gl_Position = projectionMatrix * mvPosition;
+                    }
+                `,
+                fragmentShader: `
+                    varying vec3 vColor;
+                    void main() {
+                        if ( length( gl_PointCoord - vec2( 0.5, 0.5 ) ) > 0.47 ) discard;
+                        gl_FragColor = vec4( vColor, 0.75 );
+                    }
+                `,
+                transparent: true,
+                depthWrite: false,
+                blending: THREE.AdditiveBlending
+            });
+
+            particles = new THREE.Points(geometry, material);
+            scene.add(particles);
+
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.setSize(window.innerWidth, window.innerHeight);
+
+            // Passive mouse parallax (doesn't capture clicks)
+            window.addEventListener('pointermove', (e) => {
+                mouseX = (e.clientX - windowHalfX) * 0.3;
+                mouseY = (e.clientY - windowHalfY) * 0.3;
+            }, { passive: true });
+
+            window.addEventListener('resize', () => {
+                windowHalfX = window.innerWidth / 2;
+                windowHalfY = window.innerHeight / 2;
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+            function render() {
+                requestAnimationFrame(render);
+
+                camera.position.x += (mouseX - camera.position.x) * 0.04;
+                camera.position.y += (-mouseY + 350 - camera.position.y) * 0.04;
+                camera.lookAt(scene.position);
+
+                const positions = particles.geometry.attributes.position.array;
+                const scales = particles.geometry.attributes.scale.array;
+
+                let i = 0, j = 0;
+                for (let ix = 0; ix < AMOUNTX; ix++) {
+                    for (let iy = 0; iy < AMOUNTY; iy++) {
+                        positions[i + 1] = (Math.sin((ix + count) * 0.25) * 45) + (Math.sin((iy + count) * 0.4) * 45);
+                        scales[j] = (Math.sin((ix + count) * 0.25) + 1) * 3 + (Math.sin((iy + count) * 0.4) + 1) * 3;
+                        i += 3;
+                        j++;
+                    }
+                }
+
+                particles.geometry.attributes.position.needsUpdate = true;
+                particles.geometry.attributes.scale.needsUpdate = true;
+
+                renderer.render(scene, camera);
+                count += 0.035;
+            }
+
+            render();
+            addTerminalLog('ChronosAgent: 3D Motion Wave Engine initialized.');
+        } catch (e) {
+            console.error('Three.js BG Init Error:', e);
+        }
+    }
+
     // Initial render
     bootTerminal();
     initThreeBG();
